@@ -1,0 +1,69 @@
+version: 2.0
+
+defaultLocaleCode: en-US
+localeCodes:
+  - en-US
+
+awsAccountConfig:
+  accountSources:
+    - workshop_studio
+    - customer_provided
+  regionConfiguration:
+    deployableRegions:
+      recommended:
+        - us-east-1
+
+    minAccessibleRegions: 1
+    maxAccessibleRegions: 1
+  
+  participantRole:
+    managedPolicies:
+      - "arn:aws:iam::aws:policy/AdministratorAccess"
+    trustedPrincipals:
+      service:
+        - ec2.amazonaws.com
+
+infrastructure:
+      cloudformationTemplates:
+        - templateLocation: static/infrastructure/rivsmb306-core-infrastructure.yaml
+          label: Core Workshop Infrastructure - VS Code Server with Q Developer CLI VPC IAM
+          participantVisibleStackOutputs:
+            - VSCodeServerURL
+            - VSCodeServerPassword
+          parameters:
+            - templateParameter: WorkshopInstanceType
+              defaultValue: m5.large
+              userOverridable: true
+            - templateParameter: WorkshopInstanceName
+              defaultValue: rivsmb306-workshop
+              userOverridable: true
+            - templateParameter: VSCodeUser
+              defaultValue: ec2-user
+              userOverridable: false
+        - templateLocation: static/infrastructure/rivsmb306-application-security.yaml
+          label: Application Security - Demo Logs S3 Deployment
+          participantVisibleStackOutputs:
+            - LogBucketName
+          parameters:
+            - templateParameter: AssetsBucketName
+              defaultValue: "{{.AssetsBucketName}}"
+              userOverridable: false
+            - templateParameter: AssetsBucketPrefix
+              defaultValue: "{{.AssetsBucketPrefix}}"
+              userOverridable: false
+        - templateLocation: static/infrastructure/rivsmb306-data-security.yaml
+          label: Data Security Module - Unencrypted Snapshots Lambda Crisis
+          parameters:
+            - templateParameter: DataSecurityInstanceType
+              defaultValue: t3.micro
+              userOverridable: true
+            - templateParameter: CoreInfrastructureStackName
+              defaultValue: rivsmb306-core-infrastructure
+              userOverridable: true
+            - templateParameter: DataSecurityKeyPairName
+              defaultValue: ""
+              userOverridable: true
+        - templateLocation: static/infrastructure/rivsmb306-infra-protection.yaml
+          label: Infrastructure Security Module
+        - templateLocation: static/infrastructure/rivsmb306-identity-access-management.yaml
+          label: Identity and Access Management Module - Overprivileged IAM Roles
